@@ -40,12 +40,12 @@ abstract contract WrapFee is Initializable {
     function __WrapFee_init_unchained() internal onlyInitializing {}
 
     // keccak256(abi.encode(uint256(keccak256("cashiva.storage.WrapFee")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant STORAGE_LOCATION = 0x5ba8fec81c4568d6510da99701e4a666cb633bcfb82751a5e786b4a56ab6d200;
+    bytes32 private constant WRAP_FEE_STORAGE_LOCATION = 0x5ba8fec81c4568d6510da99701e4a666cb633bcfb82751a5e786b4a56ab6d200;
 
     function _getWrapFeeStorage() private pure returns (WrapFeeStorage storage $) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := STORAGE_LOCATION
+            $.slot := WRAP_FEE_STORAGE_LOCATION
         }
     }
 

@@ -58,15 +58,15 @@ abstract contract NativeWrappable is Initializable, ERC20Upgradeable, WrapFee {
     function _wrap(address recipient, uint256 value) internal virtual {
         uint256 fee = _calcWrapFee(value);
         uint256 amount = value - fee;
-        emit Wrap(recipient, amount);
         _mint(recipient, amount);
+        emit Wrap(recipient, amount);
     }
 
     function _unwrap(address recipient, uint256 value) internal virtual {
         uint256 fee = _calcWrapFee(value);
         uint256 amount = value - fee;
-        payable(recipient).transfer(amount);
-        emit Unwrap(recipient, value);
         _burn(address(this), value);
+        emit Unwrap(recipient, value);
+        payable(recipient).transfer(amount);
     }
 }

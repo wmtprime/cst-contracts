@@ -66,12 +66,12 @@ abstract contract CashivaMintableToken is
     }
 
     // keccak256(abi.encode(uint256(keccak256("cashiva.storage.CashivaMintableToken")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant STORAGE_LOCATION = 0x9b9e7ab05886f036ccbbe5f70f770ff36db154b0409040f4610d6927942ad500;
+    bytes32 private constant CASHIVA_MINTABLE_TOKEN_STORAGE_LOCATION = 0x9b9e7ab05886f036ccbbe5f70f770ff36db154b0409040f4610d6927942ad500;
 
     function _getCashivaMintableTokenStorage() private pure returns (CashivaMintableTokenStorage storage $) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := STORAGE_LOCATION
+            $.slot := CASHIVA_MINTABLE_TOKEN_STORAGE_LOCATION
         }
     }
 

@@ -66,12 +66,12 @@ abstract contract TransferPriceEmitter is Initializable, ERC20Upgradeable {
     }
 
     // keccak256(abi.encode(uint256(keccak256("cashiva.storage.TransferPriceEmitter")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant STORAGE_LOCATION = 0xf116ee31fa11d5f3e9f2ed675718b59844fe1729415bbc6ccfe55c1ab01e2c00;
+    bytes32 private constant TRANSFER_PRICE_EMITTER_STORAGE_LOCATION = 0xf116ee31fa11d5f3e9f2ed675718b59844fe1729415bbc6ccfe55c1ab01e2c00;
 
     function _getEmitterStorageStorage() private pure returns (EmitterStorage storage $) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := STORAGE_LOCATION
+            $.slot := TRANSFER_PRICE_EMITTER_STORAGE_LOCATION
         }
     }
 

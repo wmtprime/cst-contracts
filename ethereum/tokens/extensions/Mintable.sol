@@ -97,12 +97,12 @@ abstract contract Mintable is Initializable, AccessControlUpgradeable, ERC20Upgr
     }
 
     // keccak256(abi.encode(uint256(keccak256("cashiva.storage.Mintable")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant STORAGE_LOCATION = 0xddb9e61613b3299de1a8214e91c696a267968494eb8f384023aadbd92496b700;
+    bytes32 private constant MINTABLE_STORAGE_LOCATION = 0xddb9e61613b3299de1a8214e91c696a267968494eb8f384023aadbd92496b700;
 
     function _getMintableStorage() private pure returns (MintableStorage storage $) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := STORAGE_LOCATION
+            $.slot := MINTABLE_STORAGE_LOCATION
         }
     }
 
@@ -145,22 +145,26 @@ abstract contract Mintable is Initializable, AccessControlUpgradeable, ERC20Upgr
         require(balanceOf(_msgSender()) >= amount, "Insufficient balance");
 
         MintableStorage storage $ = _getMintableStorage();
-        $._withdrawRequests[$._requestId].status = WithdrawRequestStatus.Pending;
-        $._withdrawRequests[$._requestId].account = _msgSender();
-        $._withdrawRequests[$._requestId].recipient = recipient;
-        $._withdrawRequests[$._requestId].amount = amount;
+        uint256 currentRequestId = $._requestId;
+        $._requestId++;
+        WithdrawRequest storage withdrawRequest = $._withdrawRequests[currentRequestId];
+
+        withdrawRequest.status = WithdrawRequestStatus.Pending;
+        withdrawRequest.account = _msgSender();
+        withdrawRequest.recipient = recipient;
+        withdrawRequest.amount = amount;
 
         _transfer(_msgSender(), address(this), amount);
 
         uint256 fee = _calcWrapFee(amount);
         emit WithdrawalRequestCreated(
             _msgSender(),
-            $._requestId,
+            currentRequestId,
             recipient,
             amount,
             fee
         );
-        return $._withdrawRequests[$._requestId++];
+        return withdrawRequest;
     }
 
     function getWithdrawal(uint256 withdrawalId) public view returns (WithdrawRequest memory) {
@@ -170,39 +174,41 @@ abstract contract Mintable is Initializable, AccessControlUpgradeable, ERC20Upgr
 
     function cancelWithdrawal(uint256 withdrawalId) public virtual onlyRole(BURNER_ROLE) {
         MintableStorage storage $ = _getMintableStorage();
-        if ($._withdrawRequests[withdrawalId].status != WithdrawRequestStatus.Pending) {
+        WithdrawRequest storage withdrawRequest = $._withdrawRequests[withdrawalId];
+        if (withdrawRequest.status != WithdrawRequestStatus.Pending) {
             revert WithdrawalRequestInWrongState();
         }
         _transfer(
             address(this),
-            $._withdrawRequests[withdrawalId].account,
-            $._withdrawRequests[withdrawalId].amount
+            withdrawRequest.account,
+            withdrawRequest.amount
         );
 
-        $._withdrawRequests[withdrawalId].status = WithdrawRequestStatus.Cancelled;
+        withdrawRequest.status = WithdrawRequestStatus.Cancelled;
         emit WithdrawalCancelled(
-            $._withdrawRequests[withdrawalId].account,
+            withdrawRequest.account,
             withdrawalId,
-            $._withdrawRequests[withdrawalId].recipient,
-            $._withdrawRequests[withdrawalId].amount
+            withdrawRequest.recipient,
+            withdrawRequest.amount
         );
     }
 
     function completeWithdrawal(uint256 withdrawalId, string memory txId) public virtual onlyRole(BURNER_ROLE) {
         MintableStorage storage $ = _getMintableStorage();
-        if ($._withdrawRequests[withdrawalId].status != WithdrawRequestStatus.Pending) {
+        WithdrawRequest storage withdrawRequest = $._withdrawRequests[withdrawalId];
+        if (withdrawRequest.status != WithdrawRequestStatus.Pending) {
             revert WithdrawalRequestInWrongState();
         }
-        uint256 fee = _calcWrapFee($._withdrawRequests[withdrawalId].amount);
-        $._withdrawRequests[withdrawalId].status = WithdrawRequestStatus.Completed;
-        _burn(address(this), $._withdrawRequests[withdrawalId].amount);
+        uint256 fee = _calcWrapFee(withdrawRequest.amount);
+        withdrawRequest.status = WithdrawRequestStatus.Completed;
+        _burn(address(this), withdrawRequest.amount);
         emit WithdrawalCompleted(
-            $._withdrawRequests[withdrawalId].account,
+            withdrawRequest.account,
             txId,
-            $._withdrawRequests[withdrawalId].recipient,
-            $._withdrawRequests[withdrawalId].amount,
+            withdrawRequest.recipient,
+            withdrawRequest.amount,
             fee
         );
-        emit Burn(address(this), $._withdrawRequests[withdrawalId].amount);
+        emit Burn(address(this), withdrawRequest.amount);
     }
 }

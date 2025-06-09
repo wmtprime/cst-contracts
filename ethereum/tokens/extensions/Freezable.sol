@@ -27,7 +27,7 @@ abstract contract Freezable is Initializable, ContextUpgradeable {
     event FrozenFundsBurned(address indexed account, uint256 balance);
 
     // keccak256(abi.encode(uint256(keccak256("cashiva.storage.Freezable")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant STORAGE_LOCATION = 0x98f5cbd3380b8191db24ff05e05a319c5f63cab76da3ae1bc25d634271302700;
+    bytes32 private constant FREEZABLE_STORAGE_LOCATION = 0x98f5cbd3380b8191db24ff05e05a319c5f63cab76da3ae1bc25d634271302700;
     error AccountFrozen(address account);
     error AccountUnfrozen(address account);
     event Freezing(address indexed freezer, address indexed account);
@@ -44,7 +44,7 @@ abstract contract Freezable is Initializable, ContextUpgradeable {
     function _getFreezableStorage() private pure returns (FreezableStorage storage $) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            $.slot := STORAGE_LOCATION
+            $.slot := FREEZABLE_STORAGE_LOCATION
         }
     }
 
